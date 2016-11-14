@@ -102,7 +102,14 @@ void *report_thread(void *arg)
 
 uplus_dev *find_by_id(const char *id)
 {
+    int i=0;
     //查找
+    for(;i<DEVNUM;++i)
+    {
+        if(strcmp(g_devs[i]->devid,id)==0)
+            return g_devs[i];
+    }
+    return 0;
 }
 
 int ugw_dev_read_cb(const char *devid,int sn,const char *name)
@@ -111,6 +118,7 @@ int ugw_dev_read_cb(const char *devid,int sn,const char *name)
     if(dev)
     {
         request *req=(request*)malloc(sizeof(request));
+        strcpy(req->devid,devid);
         req->sn=sn;
         req->type=1;
         req->name=(char *)malloc(strlen(name)+1);
@@ -127,6 +135,7 @@ int ugw_dev_write_cb(const char *devid,int sn,const char *name,const char *value
         request *req=(request*)malloc(sizeof(request));
         req->sn=sn;
         req->type=1;
+        strcpy(req->devid,devid);
         req->name=(char *)malloc(strlen(name)+1);
         strcpy(req->name,name);
         req->value=(char *)malloc(strlen(value)+1);
@@ -138,6 +147,16 @@ int ugw_dev_write_cb(const char *devid,int sn,const char *name,const char *value
 int ugw_dev_op_cb(const char *devid,int sn,const char *name,ugw_dev_pair* pairs[],int len)
 {
     //操作处理
+    if(strcmp(name,"getAllProperty")==0)
+    {
+        request *req=(request*)malloc(sizeof(request));
+        strcpy(req->devid,devid);
+        req->sn=sn;
+        req->type=3;
+        req->name=(char *)malloc(strlen(name)+1);
+        strcpy(req->name,name);
+        push_request(req);
+    }
     return 0;
 }
 int ugw_dev_cloud_state_cb(int state)
@@ -235,7 +254,7 @@ int main(int argc,char *argv[])
             {
                 if(randnum>90&&randnum%(i+1)==0)
                 {
-                    g_devs[i]->up=0;//模拟设备下线
+                    //g_devs[i]->up=0;//模拟设备下线
                 }
             }
             pthread_mutex_unlock(&g_dev_mutex);
@@ -287,6 +306,26 @@ int main(int argc,char *argv[])
                     else if(req->type==3)
                     {
                         //操作处理
+                        if(strcmp(req->name,"getAllProperty")==0)
+                        {
+                            ugw_dev_pair *pairs[2];
+                            char attr1str[32]={0};
+                            sprintf(attr1str,"%d",dev->attr1);
+                            pairs[0]=malloc_ugw_dev_pair("attr1",attr1str);
+                            pairs[1]=malloc_ugw_dev_pair("attr2",dev->attr2);
+
+                            //向uGW server上报状态改变
+                            int trt=ugw_dev_op_rsp(dev->devid,req->sn,pairs,2,0);
+                            if(trt==UGW_DEV_OK)
+                            {
+                            }
+                            else
+                            {
+                                //通信出错处理
+                            }
+                            free_ugw_dev_pair(pairs[0]);
+                            free_ugw_dev_pair(pairs[1]);
+                        }
                     }
                 }
                 pthread_mutex_unlock(&g_dev_mutex);
