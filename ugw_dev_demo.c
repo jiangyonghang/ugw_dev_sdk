@@ -7,6 +7,7 @@
 #define DEVNUM (3)
 #define REQNUM (100)
 
+
 typedef struct uplus_dev
 {
     char devid[32+1];
