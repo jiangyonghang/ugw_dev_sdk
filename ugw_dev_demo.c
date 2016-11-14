@@ -80,6 +80,7 @@ void *report_thread(void *arg)
                     }
                     free_ugw_dev_pair(pairs[0]);
                     free_ugw_dev_pair(pairs[1]);
+                    g_devs[i]->change=0;
                 }
                 if(g_devs[i]->alarm1!=0)
                 {
@@ -288,6 +289,7 @@ int main(int argc,char *argv[])
                         //操作处理
                     }
                 }
+                pthread_mutex_unlock(&g_dev_mutex);
             }
         }
         //随机触发报警
