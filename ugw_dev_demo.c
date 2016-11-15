@@ -135,7 +135,7 @@ int ugw_dev_write_cb(const char *devid,int sn,const char *name,const char *value
     {
         request *req=(request*)malloc(sizeof(request));
         req->sn=sn;
-        req->type=1;
+        req->type=2;
         strcpy(req->devid,devid);
         req->name=(char *)malloc(strlen(name)+1);
         strcpy(req->name,name);
@@ -255,7 +255,7 @@ int main(int argc,char *argv[])
             {
                 if(randnum>90&&randnum%(i+1)==0)
                 {
-                    //g_devs[i]->up=0;//模拟设备下线
+                    g_devs[i]->up=0;//模拟设备下线
                 }
             }
             pthread_mutex_unlock(&g_dev_mutex);
